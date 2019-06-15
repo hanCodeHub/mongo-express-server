@@ -124,7 +124,7 @@ dishRouter.route('/:dishId/comments')
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
-            for (var i = (dish.comments.length -1); i >= 0; i--) {
+            for (i = (dish.comments.length -1); i >= 0; i--) {
                 dish.comments.id(dish.comments[i]._id).remove();
             }
             dish.save()
@@ -166,7 +166,7 @@ dishRouter.route('/:dishId/comments/:commentId')
 .post((req, res, next) => {
     res.statusCode = 403; 
     res.end(`POST operation not supported on /dishes/${req.params.dishId}/comments/${req.params.commentId}`);
-}) 
+})
 .put((req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {

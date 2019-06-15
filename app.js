@@ -29,8 +29,39 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
+// Add authentication middleware before accessing data or routes
+function auth(req, res, next) {
+    console.log(req.headers);
+    var authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        var err = new Error('You are not authenticated!');
+        res.setHeader('WWW-Authenticate', 'Basic');
+        err.status = 401;
+        return next(err);
+    }
+
+    var auth = new Buffer(authHeader.split(' ')[1], 'base64') // obtain the headers on index 1. Output: 'username:password'
+        .toString().split(':'); // splits username and password
+    var username = auth[0];
+    var password = auth[1];
+
+    if (username === 'admin' && password === 'password') {
+        next(); // pass through to next middleware
+    } else {
+        var err = new Error('You are not authenticated!');
+        res.setHeader('WWW-Authenticate', 'Basic');
+        err.status = 401;
+        return next(err);
+    }
+}
+
+app.use(auth);
+
+// serve static data from the public folder
+app.use(express.static(path.join(__dirname, 'public')));
+// serve routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);
