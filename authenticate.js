@@ -20,15 +20,14 @@ exports.getToken = function(user) {
 }
 
 var opts = {};
-// defines how the JWT token is extracted from request
+// define options for JwtStrategy
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
 
-// done callback passes info back to passport
-exports.jwtPassport = passport.use(new JwtStrategy(
+// the done callback passes info back to passport
+exports.jwtPassport = passport.use('jwt', new JwtStrategy(
     opts, 
     (jwt_payload, done) => {
-        console.log('JWT payload ', jwt_payload);
         User.findOne({ _id: jwt_payload._id }, (err, user) => {
             if (err) {
                 return done(err, false);
@@ -42,3 +41,13 @@ exports.jwtPassport = passport.use(new JwtStrategy(
 ))
 
 exports.verifyUser = passport.authenticate('jwt', { session: false });
+
+exports.verifyAdmin = (req, res, next) => {
+    if (req.user.admin) {
+        next();
+    } else {
+        var err = new Error('You are not authorized to perform this operation!')
+        err.statusCode = 403;
+        return next(err);
+    }
+}

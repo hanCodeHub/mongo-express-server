@@ -21,7 +21,7 @@ dishRouter.route('/')
     .catch(err => next(err));
 })
 // if authenticate successful, then proceed with function
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.create(req.body)
     .then((dish) => {
         console.log(`Dish Created `, dish);
@@ -103,11 +103,10 @@ dishRouter.route('/:dishId/comments')
     }, (err) => next(err))
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish != null) {
-            // authenticate.verifyUser loads the user into the req object
             req.body.author = req.user._id;
             dish.comments.push(req.body);
             dish.save()
