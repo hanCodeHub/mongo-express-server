@@ -1,6 +1,8 @@
+var User = require('./models/user');
+const Dishes = require('./models/dishes');
+
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-var User = require('./models/user');
 var JwtStrategy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken');
@@ -46,8 +48,24 @@ exports.verifyAdmin = (req, res, next) => {
     if (req.user.admin) {
         next();
     } else {
-        var err = new Error('You are not authorized to perform this operation!')
-        err.statusCode = 403;
+        var err = new Error('You are not authorized to perform this operation!');
+        err.status = 403;
         return next(err);
     }
+}
+
+exports.verifyAuthor = (req, res, next) => {
+    Dishes.findById(req.params.dishId)
+    .populate('comments.author')
+        .then((dish) => dish.comments.id(req.params.commentId))
+        .then((comment) => {
+            if (req.user._id.equals(comment.author._id)) {
+                next();
+            } else {
+                var err = new Error('You are not the author of this comment!');
+                err.status = 403;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
 }
