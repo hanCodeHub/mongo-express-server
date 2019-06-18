@@ -7,20 +7,23 @@ const Currency = mongoose.Types.Currency;
 // define schema
 
 var commentSchema = new Schema({
-    rating:  {
+    rating: {
         type: Number,
         min: 1,
         max: 5,
         required: true
     },
-    comment:  {
+    comment: {
         type: String,
         required: true
     },
-
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
 }, {
-    timestamps: true
-});
+        timestamps: true
+    });
 
 var dishSchema = new Schema({
     name: {
