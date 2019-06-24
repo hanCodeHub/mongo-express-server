@@ -55,6 +55,22 @@ exports.verifyAdmin = (req, res, next) => {
     }
 }
 
+exports.verifyFavoriter = (req, res, next) => {
+    Favorites.findById(req.params.dishId)
+    .populate('comments.author')
+        .then((dish) => dish.comments.id(req.params.commentId))
+        .then((comment) => {
+            if (req.user._id.equals(comment.author._id)) {
+                next();
+            } else {
+                var err = new Error('You are not the author of this comment!');
+                err.status = 403;
+                return next(err);
+            }
+        })
+        .catch(err => next(err));
+}
+
 exports.verifyAuthor = (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .populate('comments.author')

@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 
 const authenticate = require('../authenticate');
 
+const Dishes = require('../models/dishes');
+const Users = require('../models/user');
 const Favorites = require('../models/dishes');
 
 const favoriteRouter = express.Router();
@@ -11,8 +13,8 @@ favoriteRouter.use(bodyParser.json());
 // ROUTE FOR /favorites
 favoriteRouter.route('/') 
 .get(authenticate.verifyUser, (req, res, next) => {
-    Favorites.find({ user: req.user._id })
-    .populate('user').populate('dishes')
+    Favorites.findOne({ user: req.user._id })
+    .populate('user').populate('dishes.dish')
     .then((favorites) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -24,7 +26,14 @@ favoriteRouter.route('/')
     Favorites.findOne({ user: req.user._id })
     .then((favorite) => {
         if (favorite != null) { // if favorite exists
-            req.body.forEach(dish => favorite.dishes.push(dish._id))
+            req.body.forEach(dish => {
+                favorite.dishes.id(dish._id)
+                .populate('dishes.dish')
+                .then(dish => {
+                    if (dish == null) {
+                        favorite.dishes.push(dish._id);
+                }}, err => next(err))
+            })
             favorite.save()
             .then((favorite) => {
                 res.statusCode = 200;
@@ -32,11 +41,9 @@ favoriteRouter.route('/')
                 res.json(favorite);
             }, err => next(err));
         } else { // if favorite does not exist
-            Favorites.create({ user: req.user._id, dishes: [] })
-            .then((favorite) => {
-                req.body.forEach(dish => favorite.dishes.push(dish._id));
-                favorite.save();
-            })
+            req.body.user = req.user._id;
+            console.log('This is the req body:', req.body)
+            // Favorites.create(req.body)
             .then((favorite) => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
